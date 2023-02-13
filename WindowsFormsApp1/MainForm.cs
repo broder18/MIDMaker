@@ -3,13 +3,10 @@ using System.Drawing;
 using System.IO;
 using System.Windows.Forms;
 
-namespace WindowsFormsApp1
+namespace MIDMaker
 {
     public partial class MainForm : Form
     {
-        private const ushort NumPackets = 16;
-        private const ushort NumWords = 32;
-        private const ushort BufSize = NumPackets * NumWords * 2;
         private bool[] _checked = new bool[3];
         private int _noneEmptyPackets = 0;
         private int _packetsBios;
@@ -41,19 +38,31 @@ namespace WindowsFormsApp1
         }
 
         #region CheckBox events
+
+        private void CheckPackets(bool check, ref int packets)
+        {
+            if (check)
+                NoneEmptyPackets = packets;
+            else
+                NoneEmptyPackets = -packets;
+        }
+
         private void checkBox_BIOS_CheckedChanged(object sender, EventArgs e)
         {
             _checked[0] = !_checked[0];
+            CheckPackets(_checked[0], ref _packetsBios);
         }
 
         private void checkBox_BVR_CheckedChanged(object sender, EventArgs e)
         {
             _checked[1] = !_checked[1];
+            CheckPackets(_checked[1], ref _packetsBvr);
         }
 
         private void checkBox_MFR_CheckedChanged(object sender, EventArgs e)
         {
             _checked[2] = !_checked[2];
+            CheckPackets(_checked[2], ref _packetsMfr);
         }
 
         #endregion
@@ -76,14 +85,14 @@ namespace WindowsFormsApp1
 
         private void textBox_PacketCount_TextChanged(object sender, EventArgs e)
         {
-            var emptyPackets = NumPackets - _noneEmptyPackets;
+            var emptyPackets = Defines.NumPackets - _noneEmptyPackets;
             textBox_EmptyPackets.Text = emptyPackets < 0 ? @"0" : emptyPackets.ToString();
         }
 
         private void textBox_PacketCount_Transform()
         {
             textBox_PacketCount.Text = NoneEmptyPackets.ToString();
-            textBox_PacketCount.BackColor = NoneEmptyPackets > NumPackets ? Color.Red : Color.Empty;
+            textBox_PacketCount.BackColor = NoneEmptyPackets > Defines.NumPackets ? Color.Red : Color.Empty;
         }
 
         #endregion
@@ -92,7 +101,7 @@ namespace WindowsFormsApp1
 
         private void button_Save_Transform()
         {
-            button_Save.Enabled = NoneEmptyPackets <= NumPackets;
+            button_Save.Enabled = NoneEmptyPackets <= Defines.NumPackets;
         }
 
         private void button_OpenBIOS_Click(object sender, EventArgs e)
@@ -122,11 +131,9 @@ namespace WindowsFormsApp1
                 buf = new byte[fstream.Length];
                 var read = fstream.Read(buf, 0, buf.Length);
                 NoneEmptyPackets = -packetSize;
-                packetSize = read / NumWords / 2;
-                NoneEmptyPackets = packetSize;
+                packetSize = read / Defines.NumWords / 2;
             }
         }
-
         #endregion
 
     }
