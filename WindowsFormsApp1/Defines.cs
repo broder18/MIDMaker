@@ -2,6 +2,9 @@
 {
     static class Defines
     {
+        public const byte MaskBIOS = 0x01;
+        public const byte MaskBVR = 0x02;
+        public const byte MaskMFR = 0x04;
         public const ushort NumPackets = 16;
         public const ushort NumWords = 32;
         public const ushort LenWords = 2;

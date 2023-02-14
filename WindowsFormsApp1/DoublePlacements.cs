@@ -1,9 +1,6 @@
-﻿using System.ComponentModel;
-using System.Security.Cryptography;
-
-namespace MIDMaker
+﻿namespace MIDMaker
 {
-    class BM : BasePlacement, IPostBVR, IPostMFR
+    class BM_Placement : BasePlacement, IPostBVR, IPostMFR
     {
         private int _offsetBVR;
         public void AddMFRData(byte[] data)
@@ -18,7 +15,7 @@ namespace MIDMaker
         }
     }
 
-    class BiB : BasePlacement, IPostBVR, IPostBIOS
+    class BiB_Placement : BasePlacement, IPostBVR, IPostBIOS
     {
         private int _offsetBIOS;
         public void AddBVRData(byte[] data)
@@ -33,7 +30,7 @@ namespace MIDMaker
         }
     }
 
-    class BiM : BasePlacement, IPostBIOS, IPostMFR
+    class BiM_Placement : BasePlacement, IPostBIOS, IPostMFR
     {
         private int _offsetBIOS;
 

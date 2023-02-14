@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Drawing.Text;
 using System.IO;
 
 namespace MIDMaker
@@ -28,9 +27,9 @@ namespace MIDMaker
             Array.Copy(data, 0, _buffer, offset, data.Length);
         }
 
-        public virtual void SaveFile(string path)
+        public virtual void SaveFile()
         {
-            using (var fstream = new FileStream(path, FileMode.Create))
+            using (var fstream = new FileStream("KDMID.dat", FileMode.Create))
             {
                 fstream.Write(_buffer, 0, _buffer.Length);
             }

@@ -86,6 +86,7 @@ namespace MIDMaker
             this.button_Save.TabIndex = 2;
             this.button_Save.Text = "Сохранить";
             this.button_Save.UseVisualStyleBackColor = true;
+            this.button_Save.Click += new System.EventHandler(this.button_Save_Click);
             // 
             // textBox_KDMID
             // 

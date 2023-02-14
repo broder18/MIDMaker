@@ -7,7 +7,7 @@ namespace MIDMaker
 {
     public partial class MainForm : Form
     {
-        private bool[] _checked = new bool[3];
+        private byte _checked = 0;
         private int _noneEmptyPackets = 0;
         private int _packetsBios;
         private int _packetsBvr;
@@ -39,30 +39,35 @@ namespace MIDMaker
 
         #region CheckBox events
 
-        private void CheckPackets(bool check, ref int packets)
+        private static bool IsBitSet(byte check, int pos)
         {
-            if (check)
-                NoneEmptyPackets = packets;
+            return (check & (1 << pos)) != 0;
+        }
+
+        private void CheckPackets(int pos, int packetsSize)
+        {
+            if (IsBitSet(_checked, pos))
+                NoneEmptyPackets = packetsSize;
             else
-                NoneEmptyPackets = -packets;
+                NoneEmptyPackets -= packetsSize;
         }
 
         private void checkBox_BIOS_CheckedChanged(object sender, EventArgs e)
         {
-            _checked[0] = !_checked[0];
-            CheckPackets(_checked[0], ref _packetsBios);
+            _checked ^= Defines.MaskBIOS;
+            CheckPackets(3, _packetsBios);
         }
 
         private void checkBox_BVR_CheckedChanged(object sender, EventArgs e)
         {
-            _checked[1] = !_checked[1];
-            CheckPackets(_checked[1], ref _packetsBvr);
+            _checked ^= Defines.MaskBVR;
+            CheckPackets(2, _packetsBvr);
         }
 
         private void checkBox_MFR_CheckedChanged(object sender, EventArgs e)
         {
-            _checked[2] = !_checked[2];
-            CheckPackets(_checked[2], ref _packetsMfr);
+            _checked ^= Defines.MaskMFR;
+            CheckPackets(1, _packetsMfr);
         }
 
         #endregion
@@ -136,5 +141,11 @@ namespace MIDMaker
         }
         #endregion
 
+        private void button_Save_Click(object sender, EventArgs e)
+        {
+            var creator = new PlacementCreator(ref _bufBios, ref _bufBvr, ref _bufMfr);
+            creator.Create(_checked);
+
+        }
     }
 }
