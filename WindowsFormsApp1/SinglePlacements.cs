@@ -1,4 +1,6 @@
-﻿namespace MIDMaker
+﻿using System;
+
+namespace MIDMaker
 {
     internal class MFR_Placement : BasePlacement
     {
@@ -18,11 +20,11 @@
 
     internal class BIOS_Placement : BasePlacement
     {
-        const int Offset = Defines.OffsetBIOSPacket * Defines.NumWords * Defines.LenWords;
+        private const int DefaultOffset = Defines.OffsetBIOSPacket * Defines.NumWords * Defines.LenWords;
 
         public void AddBIOSData(byte[] data)
         {
-            PostData(data, 0);
+            PostData(data, DefaultOffset);
         }
     }
 }

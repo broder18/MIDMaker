@@ -1,4 +1,6 @@
-﻿namespace MIDMaker
+﻿using System;
+
+namespace MIDMaker
 {
     static class Defines
     {
@@ -13,14 +15,15 @@
 
         public static int CalculateOffset(int len)
         {
-            var offset = len / Defines.NumWords / Defines.LenWords / Defines.NumWords;
-            return offset;
+            var offset = len / Defines.NumWords / Defines.LenWords;
+            return offset * (Defines.NumWords * Defines.LenWords) + 1;
         }
 
         public static int CalculateBIOSOffset(int len)
         {
+            var biosByteOffset = Defines.OffsetBIOSPacket * Defines.NumWords * Defines.LenWords;
             var offset = CalculateOffset(len);
-            return offset < 9 ? 9 : offset;
+            return offset < (biosByteOffset) ? biosByteOffset : offset;
         }
     }
 }

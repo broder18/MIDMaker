@@ -44,30 +44,33 @@ namespace MIDMaker
             return (check & (1 << pos)) != 0;
         }
 
-        private void CheckPackets(int pos, int packetsSize)
+        private void CheckPackets(int packetsSize, bool checkBit)
         {
-            if (IsBitSet(_checked, pos))
+            if (checkBit)
                 NoneEmptyPackets = packetsSize;
             else
-                NoneEmptyPackets -= packetsSize;
+            {
+                NoneEmptyPackets = -packetsSize;
+            }
+                
         }
 
         private void checkBox_BIOS_CheckedChanged(object sender, EventArgs e)
         {
             _checked ^= Defines.MaskBIOS;
-            CheckPackets(3, _packetsBios);
+            CheckPackets(_packetsBios, checkBox_BIOS.Checked);
         }
 
         private void checkBox_BVR_CheckedChanged(object sender, EventArgs e)
         {
             _checked ^= Defines.MaskBVR;
-            CheckPackets(2, _packetsBvr);
+            CheckPackets(_packetsBvr, checkBox_BVR.Checked);
         }
 
         private void checkBox_MFR_CheckedChanged(object sender, EventArgs e)
         {
             _checked ^= Defines.MaskMFR;
-            CheckPackets(1, _packetsMfr);
+            CheckPackets(_packetsMfr, checkBox_MFR.Checked);
         }
 
         #endregion
@@ -145,7 +148,6 @@ namespace MIDMaker
         {
             var creator = new PlacementCreator(ref _bufBios, ref _bufBvr, ref _bufMfr);
             creator.Create(_checked);
-
         }
     }
 }

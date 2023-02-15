@@ -25,6 +25,7 @@ namespace MIDMaker
         protected void PostData(byte[] data, int offset)
         {
             Array.Copy(data, 0, _buffer, offset, data.Length);
+            
         }
 
         public virtual void SaveFile()
