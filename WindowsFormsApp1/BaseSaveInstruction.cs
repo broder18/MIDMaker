@@ -18,7 +18,7 @@ namespace MIDMaker
         void AddMFRData(byte[] data);
     }
 
-    class BasePlacement
+    internal class BasePlacement
     { 
         protected byte[] _buffer = new byte[Defines.BufSize];
 

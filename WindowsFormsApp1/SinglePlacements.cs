@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace MIDMaker
+﻿namespace MIDMaker
 {
     internal class MFR_Placement : BasePlacement
     {

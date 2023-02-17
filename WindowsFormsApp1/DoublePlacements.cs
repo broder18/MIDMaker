@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace MIDMaker
+﻿namespace MIDMaker
 {
     class BM_Placement : BasePlacement, IPostBVR, IPostMFR
     {

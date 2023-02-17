@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace MIDMaker
+﻿namespace MIDMaker
 {
     internal class PlacementCreator
     {
@@ -8,7 +6,7 @@ namespace MIDMaker
         private byte[] _bufBvr;
         private byte[] _bufMfr;
 
-        internal PlacementCreator(ref byte[] bufBios, ref byte[] bufBvr, ref byte[] bufMfr)
+        internal PlacementCreator(byte[] bufBios, byte[] bufBvr, byte[] bufMfr)
         {
             _bufBios = bufBios;
             _bufBvr = bufBvr;

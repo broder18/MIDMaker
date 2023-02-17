@@ -9,13 +9,8 @@ namespace MIDMaker
     {
         private byte _checked = 0;
         private int _noneEmptyPackets = 0;
-        private int _packetsBios;
-        private int _packetsBvr;
-        private int _packetsMfr;
-        private byte[] _bufBios;
-        private byte[] _bufBvr;
-        private byte[] _bufMfr;
 
+        private ModuleManager _moduleManager;
         private delegate void Action();
         private event Action OnSizePacketsChanged;
         private int NoneEmptyPackets
@@ -35,42 +30,49 @@ namespace MIDMaker
             OnSizePacketsChanged += textBox_PacketCount_Transform;
             OnSizePacketsChanged += button_Save_Transform;
             openFileDialog.Filter = @"dat files (*.dat)| *.dat";
+            ReadINI();
+        }
+        private void MainForm_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            var iniManager = new INIManager("config.ini");
+            iniManager.WriteString("main", "flags", _checked.ToString());
+            WriteSection(iniManager, "bios");
+            WriteSection(iniManager, "bvr");
+            WriteSection(iniManager, "mfr");
         }
 
         #region CheckBox events
-
-        private static bool IsBitSet(byte check, int pos)
-        {
-            return (check & (1 << pos)) != 0;
-        }
 
         private void CheckPackets(int packetsSize, bool checkBit)
         {
             if (checkBit)
                 NoneEmptyPackets = packetsSize;
             else
-            {
                 NoneEmptyPackets = -packetsSize;
-            }
-                
         }
 
         private void checkBox_BIOS_CheckedChanged(object sender, EventArgs e)
         {
             _checked ^= Defines.MaskBIOS;
-            CheckPackets(_packetsBios, checkBox_BIOS.Checked);
+            var packetsSize = 0;
+            _moduleManager.PacketSize("bios", ref packetsSize, false);
+            CheckPackets(packetsSize, checkBox_BIOS.Checked);
         }
 
         private void checkBox_BVR_CheckedChanged(object sender, EventArgs e)
         {
             _checked ^= Defines.MaskBVR;
-            CheckPackets(_packetsBvr, checkBox_BVR.Checked);
+            var packetsSize = 0;
+            _moduleManager.PacketSize("bvr", ref packetsSize, false);
+            CheckPackets(packetsSize, checkBox_BVR.Checked);
         }
 
         private void checkBox_MFR_CheckedChanged(object sender, EventArgs e)
         {
             _checked ^= Defines.MaskMFR;
-            CheckPackets(_packetsMfr, checkBox_MFR.Checked);
+            var packetsSize = 0;
+            _moduleManager.PacketSize("mfr", ref packetsSize, false);
+            CheckPackets(packetsSize, checkBox_MFR.Checked);
         }
 
         #endregion
@@ -105,6 +107,29 @@ namespace MIDMaker
 
         #endregion
 
+        #region FileDialog
+
+        private void SavePathDialog(string section)
+        {
+            var path = openFileDialog.FileName;
+            _moduleManager.Path(section, ref path, true);
+        }
+
+        private bool CheckFileDialog()
+        {
+            return openFileDialog.ShowDialog() != DialogResult.Cancel;
+        }
+
+        private void ReadFileDialog(string section)
+        {
+            var filename = openFileDialog.FileName;
+            TextBox textBox = null;
+            _moduleManager.TextBox(section, ref textBox, false);
+            textBox.Text = filename;
+        }
+
+        #endregion
+
         #region Button events
 
         private void button_Save_Transform()
@@ -114,40 +139,129 @@ namespace MIDMaker
 
         private void button_OpenBIOS_Click(object sender, EventArgs e)
         {
-            ReadBuffer(textBox_BIOS, ref _bufBios, ref _packetsBios);
+            if(!CheckFileDialog()) return;
+            SavePathDialog("bios");
+            ReadFileDialog("bios");
+            ReadBuffer("bios");
         }
 
         private void button_OpenBVR_Click(object sender, EventArgs e)
         {
-            ReadBuffer(textBox_BVR, ref _bufBvr, ref _packetsBvr);
+            if (!CheckFileDialog()) return;
+            SavePathDialog("bvr");
+            ReadFileDialog("bvr");
+            ReadBuffer("bvr");
         }
 
         private void button_OpenMFR_Click(object sender, EventArgs e)
         {
-            ReadBuffer(textBox_MFR, ref _bufMfr, ref _packetsMfr);
+            if (!CheckFileDialog()) return;
+            SavePathDialog("mfr");
+            ReadFileDialog("mfr");
+            ReadBuffer("mfr");
         }
-
-        private void ReadBuffer(TextBox textBox, ref byte[] buf, ref int packetSize)
-        {
-            if (openFileDialog.ShowDialog() == DialogResult.Cancel)
-                return;
-
-            var filename = openFileDialog.FileName;
-            textBox.Text = filename;
-            using (var fstream = File.OpenRead(filename))
-            {
-                buf = new byte[fstream.Length];
-                var read = fstream.Read(buf, 0, buf.Length);
-                NoneEmptyPackets = -packetSize;
-                packetSize = read / Defines.NumWords / 2;
-            }
-        }
-        #endregion
 
         private void button_Save_Click(object sender, EventArgs e)
         {
-            var creator = new PlacementCreator(ref _bufBios, ref _bufBvr, ref _bufMfr);
+            byte[] bytesBios = { },
+                bytesBvr = { },
+                bytesMfr = { };
+
+            if (_checked % 2 == 1)
+                _moduleManager.BufferBytes("bios", ref bytesBios, false);
+
+            if ((_checked >> 1) % 2 == 1)
+                _moduleManager.BufferBytes("bvr", ref bytesBvr, false);
+
+            if ((_checked >> 2) % 2 == 1)
+                _moduleManager.BufferBytes("mfr", ref bytesMfr, false);
+
+            var creator = new PlacementCreator(bytesBios, bytesBvr, bytesMfr);
             creator.Create(_checked);
         }
+
+        #endregion
+
+        #region ReadingData
+        private void ReadBuffer(string section)
+        {
+            var read = ReadBytes(section);
+            ChangeNoneEmptyPackets(section, read);
+        }
+
+        private void ChangeNoneEmptyPackets(string section, int read)
+        {
+            var packetsSize = 0;
+            _moduleManager.PacketSize(section, ref packetsSize, false);
+            NoneEmptyPackets = -packetsSize;
+            var fractionPacket = read % (Defines.NumWords * Defines.LenWords);
+            packetsSize = read / Defines.NumWords / Defines.LenWords;
+            if (fractionPacket != 0)
+                packetsSize++;
+            _moduleManager.PacketSize(section, ref packetsSize, true);
+        }
+
+        private int ReadBytes(string section)
+        {
+            string filename = null;
+            _moduleManager.Path(section, ref filename, false);
+            using (var fstream = File.OpenRead(filename))
+            {
+                var bytesArray = new byte[fstream.Length];
+                var read = fstream.Read(bytesArray, 0, bytesArray.Length);
+                _moduleManager.BufferBytes(section, ref bytesArray, true);
+                return read;
+            }
+        }
+
+        #endregion
+
+        #region INI
+
+        private void WriteSection(INIManager iniManager, string section)
+        {
+            var path ="";
+            _moduleManager.Path(section, ref path, false);
+            iniManager.WriteString(section, "path", path);
+            var packetsSize = 0;
+            _moduleManager.PacketSize(section, ref packetsSize, false);
+            iniManager.WriteString(section, "packetsSize", packetsSize.ToString());
+        }
+
+        private void ReadINI()
+        {
+            var iniManager = new INIManager("config.ini");
+            _moduleManager = new ModuleManager();
+            AddModuleParams("bios", iniManager, textBox_BIOS);
+            AddModuleParams("bvr", iniManager, textBox_BVR);
+            AddModuleParams("mfr", iniManager, textBox_MFR);
+            TransformCheckBox(iniManager);
+        }
+
+        private void TransformCheckBox(INIManager iniManager)
+        {
+            var flags = Convert.ToByte(iniManager.ReadString("main", "flags"));
+            checkBox_BIOS.Checked = Convert.ToBoolean(flags % 2);
+            checkBox_BVR.Checked = Convert.ToBoolean(flags >> 1 % 2);
+            checkBox_MFR.Checked = Convert.ToBoolean(flags >> 2 % 2);
+        }
+
+        private void AddModuleParams(string section, INIManager iniManager, TextBox textBox)
+        {
+            _moduleManager.AddModule(section);
+            _moduleManager.TextBox(section, ref textBox, true);
+            AddPath(section, iniManager);
+            ReadBuffer(section);
+        }
+
+        private void AddPath(string section, INIManager iniManager)
+        {
+            var filename = iniManager.ReadString(section, "path");
+            if (filename == string.Empty) return;
+            _moduleManager.Path(section, ref filename, true);
+        }
+
+        #endregion
+
     }
 }
