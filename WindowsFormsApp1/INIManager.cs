@@ -5,14 +5,20 @@ using System.Text;
 
 namespace MIDMaker
 {
-    class INIManager
+    internal class INIManager
     {
         private const int Size = 1024;
         private readonly string _path;
 
+        public bool IsExists
+        {
+            get;
+        }
+
         public INIManager(string aPath)
         {
             _path = Path.ChangeExtension(Application.ExecutablePath, ".ini");
+            IsExists = File.Exists(_path);
         }
 
         public string ReadString(string aSection, string aKey)

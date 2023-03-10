@@ -13,13 +13,13 @@
 
         public static int CalculateOffset(int len)
         {
-            var offset = len / Defines.NumWords / Defines.LenWords;
-            return (offset+1) * (Defines.NumWords * Defines.LenWords);
+            var offset = len / NumWords / LenWords;
+            return (offset+1) * (NumWords * LenWords);
         }
 
         public static int CalculateBIOSOffset(int len)
         {
-            const int biosByteOffset = Defines.OffsetBIOSPacket * Defines.NumWords * Defines.LenWords;
+            const int biosByteOffset = OffsetBIOSPacket * NumWords * LenWords;
             var offset = CalculateOffset(len);
             return offset < (biosByteOffset) ? biosByteOffset : offset;
         }

@@ -1,7 +1,7 @@
 ﻿
 namespace MIDMaker
 {
-    class FullPlacement : BasePlacement, IPostBIOS, IPostMFR, IPostBVR
+    internal class FullPlacement : BasePlacement, IPostBIOS, IPostMFR, IPostBVR
     {
         private int _offsetBVR;
         private int _offsetBIOS;

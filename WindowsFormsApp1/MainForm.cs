@@ -186,6 +186,21 @@ namespace MIDMaker
         private void ReadBuffer(string section)
         {
             var read = ReadBytes(section);
+            if (read == -1)
+            {
+                switch (section)
+                {
+                    case "bios":
+                        checkBox_BIOS.Checked = false;
+                        break;
+                    case "bvr":
+                        checkBox_BVR.Checked = false;
+                        break;
+                    default:
+                        checkBox_MFR.Checked = false;
+                        break;
+                }
+            }
             ChangeNoneEmptyPackets(section, read);
         }
 
@@ -193,7 +208,6 @@ namespace MIDMaker
         {
             var packetsSize = 0;
             _moduleManager.PacketSize(section, ref packetsSize, false);
-            NoneEmptyPackets = -packetsSize;
             var fractionPacket = read % (Defines.NumWords * Defines.LenWords);
             packetsSize = read / Defines.NumWords / Defines.LenWords;
             if (fractionPacket != 0)
@@ -203,15 +217,32 @@ namespace MIDMaker
 
         private int ReadBytes(string section)
         {
-            string filename = null;
-            _moduleManager.Path(section, ref filename, false);
-            using (var fstream = File.OpenRead(filename))
+            try
             {
-                var bytesArray = new byte[fstream.Length];
-                var read = fstream.Read(bytesArray, 0, bytesArray.Length);
-                _moduleManager.BufferBytes(section, ref bytesArray, true);
-                return read;
+                string filename = null;
+                _moduleManager.Path(section, ref filename, false);
+                if (string.IsNullOrEmpty(filename))
+                    return -1;
+                using (var fstream = File.OpenRead(filename))
+                {
+                    if (fstream.Length % Defines.NumWords % Defines.LenWords != 0)
+                        throw new Exception("Несовместимый размер данных");
+                    var bytesArray = new byte[fstream.Length];
+                    var read = fstream.Read(bytesArray, 0, bytesArray.Length);
+                    _moduleManager.BufferBytes(section, ref bytesArray, true);
+                    return read;
+                }
             }
+            catch (Exception e)
+            {
+                MessageBox.Show(e.Message, "Reading data", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                TextBox textBox = null;
+                _moduleManager.TextBox(section, ref textBox, false);
+                textBox.Text = "";
+                return -1;
+                //throw;
+            }
+            
         }
 
         #endregion
@@ -240,6 +271,7 @@ namespace MIDMaker
 
         private void TransformCheckBox(INIManager iniManager)
         {
+            if (!iniManager.IsExists) return;
             var flags = Convert.ToByte(iniManager.ReadString("main", "flags"));
             checkBox_BIOS.Checked = Convert.ToBoolean(flags % 2);
             checkBox_BVR.Checked = Convert.ToBoolean(flags >> 1 % 2);
@@ -250,6 +282,7 @@ namespace MIDMaker
         {
             _moduleManager.AddModule(section);
             _moduleManager.TextBox(section, ref textBox, true);
+            if (!iniManager.IsExists) return;
             AddPath(section, iniManager);
             ReadBuffer(section);
         }

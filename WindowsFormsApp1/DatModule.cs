@@ -3,7 +3,7 @@ using System.Windows.Forms;
 
 namespace MIDMaker
 {
-    class DatModule
+    internal class DatModule
     {
         public DatModule(string section)
         {
@@ -17,7 +17,7 @@ namespace MIDMaker
         public string Path;
     }
 
-    class ModuleManager
+    internal class ModuleManager
     {
         private readonly Dictionary<string, DatModule> _moduleMap;
 

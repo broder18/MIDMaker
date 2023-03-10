@@ -1,6 +1,6 @@
 ﻿namespace MIDMaker
 {
-    class BM_Placement : BasePlacement, IPostBVR, IPostMFR
+    internal class BM_Placement : BasePlacement, IPostBVR, IPostMFR
     {
         private int _offsetBVR;
         public void AddMFRData(byte[] data)
